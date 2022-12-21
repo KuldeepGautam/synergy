@@ -3,10 +3,13 @@ import React, { useEffect, useState } from "react";
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
+  const [cart, setCart] = useState([]);
+  const [showCart, setShowCart] = useState(false);
+  // const [productsCount, setProductCount] = useState(0);
 
   useEffect(() => {
     getProducts();
-  });
+  }, []);
 
   function getProducts() {
     axios.get("https://fakestoreapi.com/products").then(function (response) {
@@ -15,14 +18,32 @@ const ProductList = () => {
     });
   }
 
+  const isAdded = (product) => {
+    const index = cart.findIndex(({ id }) => id === product.id);
+    return index > -1;
+  };
+
+  const handleAdd = (product) => {
+    if (isAdded(product)) return;
+
+    const newCart = [...cart];
+    newCart.push(product);
+    setCart(newCart);
+  };
+
   return (
     <>
       <br />
       <div className="container-fluid">
         <h3 style={{ textAlign: "right" }}>
-          Item Added:&ensp;
+          Cart Item:&ensp;
           <b>
-            <button className="btn btn-sm btn-primary">10</button>
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={() => setShowCart(!showCart)}
+            >
+              {cart.length}
+            </button>
           </b>
         </h3>
         <h2>Product Lists</h2>
@@ -37,26 +58,42 @@ const ProductList = () => {
                 <th scope="col">Category</th>
                 <th scope="col">Image</th>
                 <th scope="col">Rating</th>
-                <th scope="col">Add item</th>
+                {!showCart && <th scope="col">Add item</th>}
               </tr>
             </thead>
             <tbody>
-              {products.map((product, key) => (
+              {(showCart ? cart : products).map((product, key) => (
                 <tr key={key}>
                   <td>{product.id}</td>
                   <td>{product.title}</td>
                   <td>{product.price}</td>
                   <td>{product.description}</td>
                   <td>{product.category}</td>
-                  <td>{product.image}</td>
-                  <td>{product.rating.rate}</td>
                   <td>
-                    <button className="btn btn-sm btn-primary">Add</button>
+                    <img src={product.image} width="70px" height="70px" />
                   </td>
+                  <td>{product.rating.rate}</td>
+                  {!showCart && (
+                    <td>
+                      <button
+                        disabled={isAdded(product)}
+                        className="btn btn-sm btn-primary"
+                        onClick={() => handleAdd(product)}
+                      >
+                        Add
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
+          {showCart && (
+            <div style={{ textAlign: "right" }}>
+              <button className="btn btn-sm btn-success">Buy Now</button>
+              <br />
+            </div>
+          )}
         </div>
       </div>
     </>
