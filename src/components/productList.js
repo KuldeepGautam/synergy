@@ -9,10 +9,19 @@ const ProductList = () => {
 
   useEffect(() => {
     getProducts();
+
+    const cartInSession = sessionStorage.getItem("cart");
+    if (cartInSession) setCart(JSON.parse(cartInSession));
+    const showCartInSession = sessionStorage.getItem("showCart");
+    setShowCart(Boolean(JSON.parse(showCartInSession)));
+
+
   }, []);
 
   function getProducts() {
-    axios.get("https://fakestoreapi.com/products").then(function (response) {
+    // axios.get("https://randomuser.me/api").then(function (response) {
+    // axios.get("https://fakestoreapi.com/products").then(function (response) {
+    axios.get("https://fakestoreapi.com/products?limit=10").then(function (response) {
       console.log(response.data);
       setProducts(response.data);
     });
@@ -29,6 +38,14 @@ const ProductList = () => {
     const newCart = [...cart];
     newCart.push(product);
     setCart(newCart);
+    sessionStorage.setItem("cart", JSON.stringify(newCart));
+  };
+
+  const handleRemove = (product) => {
+    let newCart = [...cart];
+    newCart = newCart.filter(({ id }) => id !== product.id);
+    setCart(newCart);
+    sessionStorage.setItem("cart", JSON.stringify(newCart));
   };
 
   return (
@@ -40,7 +57,10 @@ const ProductList = () => {
           <b>
             <button
               className="btn btn-sm btn-danger"
-              onClick={() => setShowCart(!showCart)}
+              onClick={() => {
+                setShowCart(!showCart)
+                sessionStorage.setItem("showCart", JSON.stringify(!showCart));
+              }}
             >
               {cart.length}
             </button>
@@ -58,7 +78,7 @@ const ProductList = () => {
                 <th scope="col">Category</th>
                 <th scope="col">Image</th>
                 <th scope="col">Rating</th>
-                {!showCart && <th scope="col">Add item</th>}
+                {showCart ? <th scope="col">Remove item</th> : <th scope="col">Add item</th>}
               </tr>
             </thead>
             <tbody>
@@ -73,7 +93,16 @@ const ProductList = () => {
                     <img src={product.image} width="70px" height="70px" />
                   </td>
                   <td>{product.rating.rate}</td>
-                  {!showCart && (
+                  {showCart ? (
+                    <td>
+                      <button
+                        className="btn btn-sm btn-primary"
+                        onClick={() => handleRemove(product)}
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  ) : (
                     <td>
                       <button
                         disabled={isAdded(product)}
